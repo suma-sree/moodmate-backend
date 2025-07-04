@@ -2,7 +2,11 @@ from flask import Flask, request, jsonify
 from textblob import TextBlob
 import random
 
+
 app = Flask(__name__)
+
+from flask_cors import CORS
+CORS(app)
 
 # Sample responses
 responses = {
