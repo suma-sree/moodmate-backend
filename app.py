@@ -1,11 +1,9 @@
 from flask import Flask, request, jsonify
 from textblob import TextBlob
+from flask_cors import CORS
 import random
 
-
 app = Flask(__name__)
-
-from flask_cors import CORS
 CORS(app)
 
 # Sample responses
@@ -30,22 +28,32 @@ responses = {
     }
 }
 
+def detect_emotion(text):
+    text = text.lower()
+    
+    if any(word in text for word in ['sad', 'tired', 'exhausted', 'low', 'depressed', 'down', 'burned out', 'stressed']):
+        return 'negative'
+    elif any(word in text for word in ['happy', 'excited', 'joyful', 'awesome', 'great', 'motivated']):
+        return 'positive'
+    elif any(word in text for word in ['angry', 'mad', 'furious', 'annoyed']):
+        return 'negative'
+    else:
+        polarity = TextBlob(text).sentiment.polarity
+        if polarity > 0.1:
+            return 'positive'
+        elif polarity < -0.1:
+            return 'negative'
+        else:
+            return 'neutral'
+
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.get_json()
     text = data.get("text", "")
-
-    blob = TextBlob(text)
-    polarity = blob.sentiment.polarity
-
-    if polarity > 0.1:
-        mood = "positive"
-    elif polarity < -0.1:
-        mood = "negative"
-    else:
-        mood = "neutral"
-
+    
+    mood = detect_emotion(text)
     r = responses[mood]
+
     return jsonify({
         "emotion": mood,
         "todos": r["todos"],
